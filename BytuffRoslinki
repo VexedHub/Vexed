@@ -1,0 +1,47 @@
+local folder = workspace.Roslinki
+local selectedPartName = "RoslinkaHitbox"
+
+local function AddESP(element, labelText)
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = "ESP"
+    billboardGui.AlwaysOnTop = true
+    billboardGui.Size = UDim2.new(1, 0, 1, 0)
+    billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+    billboardGui.Parent = element
+
+    local frame = Instance.new("Frame")
+    frame.BackgroundTransparency = 1
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.Parent = billboardGui
+
+    local outline = Instance.new("Frame")
+    outline.BackgroundTransparency = 0
+    outline.BackgroundColor3 = Color3.new(0, 1, 0)
+    outline.BorderSizePixel = 2
+    outline.Size = UDim2.new(1, 4, 1, 4)
+    outline.Position = UDim2.new(-0.5, -2, -0.5, -2)
+    outline.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Name = "ESPLabel"
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.Position = UDim2.new(0, 0, 1, 0)
+    label.Text = labelText
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextStrokeTransparency = 0.5
+    label.Parent = billboardGui
+end
+
+local function AddESPToFolder(folder, selectedPartName)
+    for _, model in ipairs(folder:GetChildren()) do
+        if model:IsA("Model") then
+            local selectedPart = model:FindFirstChild(selectedPartName)
+            if selectedPart and selectedPart:IsA("BasePart") then
+                AddESP(selectedPart, selectedPart.Name)
+            end
+        end
+    end
+end
+
+AddESPToFolder(folder, selectedPartName)
