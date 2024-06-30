@@ -1,0 +1,98 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local camera = workspace.CurrentCamera
+local activeElements = {} 
+
+local function hasHumanoid(model)
+    for _, part in ipairs(model:GetChildren()) do
+        if part:IsA("Humanoid") then
+            return true
+        end
+    end
+    return false
+end
+
+local function createElement(model)
+    local line = Drawing.new("Line")
+    line.Color = Color3.fromRGB(255, 0, 0)
+    line.Thickness = 3 
+    line.Transparency = 0.5 
+
+    local label = Drawing.new("Text")
+    label.Size = 16
+    label.Center = true
+    label.Outline = true
+    label.Color = Color3.fromRGB(255, 255, 255)
+    label.Transparency = 0.8 
+
+    table.insert(activeElements, {line = line, label = label, model = model})
+
+    local connection
+    connection = game:GetService("RunService").RenderStepped:Connect(function()
+        if model and model.Parent == workspace then
+            local modelCenter = model:GetModelCFrame().p
+            local screenPos, onScreen = camera:WorldToViewportPoint(modelCenter)
+            local distance = (character.Head.Position - modelCenter).Magnitude
+
+            if onScreen then
+                line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                line.To = Vector2.new(screenPos.X, screenPos.Y)
+                line.Visible = true
+
+                label.Position = Vector2.new(screenPos.X, screenPos.Y - 20)
+                label.Text = string.format("Distance: %.2f", distance)
+                label.Visible = true
+            else
+                line.Visible = false
+                label.Visible = false
+            end
+        else
+            line.Visible = false
+            label.Visible = false
+            connection:Disconnect()
+        end
+    end)
+end
+
+local function trackModels()
+    for _, entry in ipairs(activeElements) do
+        entry.line.Visible = false
+        entry.line:Remove()
+        entry.label.Visible = false
+        entry.label:Remove()
+    end
+    activeElements = {}
+
+    for i = 1, 100 do
+        local modelName = tostring(i)
+        for _, model in ipairs(workspace:GetChildren()) do
+            if model:IsA("Model") and model.Name == modelName and model.Parent == workspace and hasHumanoid(model) then
+                createElement(model)
+            end
+        end
+    end
+end
+
+workspace.ChildAdded:Connect(function(child)
+    if child:IsA("Model") and tonumber(child.Name) and child.Parent == workspace and hasHumanoid(child) then
+        createElement(child)
+    end
+end)
+
+
+workspace.ChildRemoved:Connect(function(child)
+    if child:IsA("Model") and tonumber(child.Name) then
+        for i, entry in ipairs(activeElements) do
+            if entry.model == child then
+                entry.line.Visible = false
+                entry.line:Remove()
+                entry.label.Visible = false
+                entry.label:Remove()
+                table.remove(activeElements, i)
+                break
+            end
+        end
+    end
+end)
+
+trackModels()
